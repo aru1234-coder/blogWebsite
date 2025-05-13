@@ -17,8 +17,6 @@ const page = () => {
     name: "",
   });
 
-  console.log("formData", formData);
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
