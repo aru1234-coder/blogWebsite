@@ -3,43 +3,66 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button, Group } from "@mantine/core";
 import { DataTable } from "mantine-datatable";
-
-const staticBlogs = [
-  {
-    id: 1,
-    user_name: "John Doe",
-    category_name: "Technology",
-    title: "Understanding React Hooks",
-    status: "published",
-  },
-  {
-    id: 2,
-    user_name: "Jane Smith",
-    category_name: "Health",
-    title: "10 Tips for a Healthier Life",
-    status: "draft",
-  },
-];
+import { FaRegEdit } from "react-icons/fa";
+import { MdDelete } from "react-icons/md";
+import axios from "axios";
+import apiRoutes from "@/app/utils/apiRoutes";
+import toast from "react-hot-toast";
+import BlogModal from "../../../components/BlogModal";
 
 const BlogPage = () => {
-  const [blogs, setBlogs] = useState([]);
-
+  const [blogsData, setBlogsData] = useState([]);
   useEffect(() => {
-    setBlogs(staticBlogs);
+    getBlogs();
   }, []);
 
-  const handleDelete = (id) => {
-    if (!confirm("Are you sure you want to delete this blog?")) return;
-    setBlogs((prev) => prev.filter((b) => b.id !== id));
+  // Inside component state
+  const [modalOpened, setModalOpened] = useState(false);
+  const [modalMode, setModalMode] = useState("add"); // or "edit"
+  const [selectedBlog, setSelectedBlog] = useState(null);
+
+  // To open modal in add/edit mode
+  const openAddModal = () => {
+    setModalMode("add");
+    setSelectedBlog(null);
+    setModalOpened(true);
+  };
+
+  const openEditModal = (blog) => {
+    setModalMode("edit");
+    setSelectedBlog(blog);
+    setModalOpened(true);
+  };
+
+  const getBlogs = async () => {
+    try {
+      const response = await axios.get(apiRoutes.blogs.getAll);
+      setBlogsData(response.data);
+    } catch (error) {
+      console.error("Error showing in data fetching");
+    }
+  };
+
+  const handleDelete = async (id) => {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this blog?"
+    );
+    if (!confirmed) return;
+
+    try {
+      await axios.delete(apiRoutes.blogs.delete(id));
+      setBlogsData((prev) => prev.filter((b) => b.id !== id));
+      toast.success("Blog deleted successfully");
+    } catch (error) {
+      toast.error("Something went wrong !!");
+    }
   };
 
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-xl font-semibold">Blog Management</h1>
-        <Link href="/blogs/add">
-          <Button color="blue">Add Blog</Button>
-        </Link>
+        <Button onClick={openAddModal}>Add Blog</Button>
       </div>
 
       <DataTable
@@ -47,8 +70,8 @@ const BlogPage = () => {
         highlightOnHover
         columns={[
           { accessor: "id", title: "ID", textAlign: "center" },
-          { accessor: "user_name", title: "User" },
-          { accessor: "category_name", title: "Category" },
+          { accessor: "userName", title: "User" },
+          { accessor: "categoryName", title: "Category" },
           { accessor: "title", title: "Title" },
           {
             accessor: "status",
@@ -58,34 +81,39 @@ const BlogPage = () => {
           {
             accessor: "actions",
             title: "Actions",
-            textAlign: "center",
             render: (row) => (
-              <Group spacing="xs" position="center" noWrap>
-                <Link href={`/blogs/edit/${row.id}`}>
-                  <Button color="yellow" size="xs">
-                    Edit
-                  </Button>
-                </Link>
+              <Group spacing="xs" position="center" nowrap="true">
+                <Button onClick={() => openEditModal(row)}>
+                  <FaRegEdit />
+                </Button>
                 <Button
                   color="red"
                   size="xs"
                   onClick={() => handleDelete(row.id)}
                 >
-                  Delete
+                  <MdDelete />
                 </Button>
               </Group>
             ),
           },
         ]}
-        records={blogs}
+        records={blogsData}
         noRecordsText="No blogs found."
         striped
         verticalSpacing="sm"
         pagination="true"
-        totalRecords={blogs.length}
+        totalRecords={blogsData.length}
         recordsPerPage={5}
         page={1}
         onPageChange={() => {}}
+      />
+
+      <BlogModal
+        opened={modalOpened}
+        onClose={() => setModalOpened(false)}
+        mode={modalMode}
+        blogData={selectedBlog}
+        onSuccess={getBlogs}
       />
     </div>
   );
