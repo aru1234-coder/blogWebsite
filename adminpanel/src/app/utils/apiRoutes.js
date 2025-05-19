@@ -1,5 +1,8 @@
 const BASE_URL = "http://localhost:5000/api"; // or your production URL
 
+export const LOGIN = `${BASE_URL}/auth/login`;
+export const REGISTER = `${BASE_URL}/auth/register`;
+
 const BLOG_BASE_URL = `${BASE_URL}/blogs`;
 const CATEGORIES_BASE_URL = `${BASE_URL}/categories`;
 const USER_BASE_URL = `${BASE_URL}/users`;
