@@ -3,20 +3,10 @@ const db = require("../db");
 require("dotenv").config();
 
 exports.addBlog = async (req, res) => {
-  const { userName, categoryName, title, content, image, status } = req.body;
+  const { userId, categoryName, title, content, image, status, slug } =
+    req.body;
   try {
-    // 1. Get user_id from userName
-    const [userRows] = await db.execute("SELECT id FROM users WHERE name = ?", [
-      userName,
-    ]);
-
-    if (userRows.length === 0) {
-      return res.status(400).json({ error: "User not found" });
-    }
-
-    const user_id = userRows[0].id;
-
-    // 2. Get category_id from categoryName
+    //  Get category_id from categoryName
     const [categoryRows] = await db.execute(
       "SELECT id FROM categories WHERE name = ?",
       [categoryName]
@@ -27,36 +17,25 @@ exports.addBlog = async (req, res) => {
     }
 
     const category_id = categoryRows[0].id;
-
     // 3. Insert into blogs table
     await db.execute(
-      `INSERT INTO blogs (user_id, category_id, title, content, image, status) VALUES (?, ?, ?, ?, ?, ?)`,
-      [user_id, category_id, title, content, image, status]
+      `INSERT INTO blogs (user_id, category_id, title, content, image, status,slug) VALUES (?, ?, ?, ?, ?, ?,?)`,
+      [userId, category_id, title, content, image, status, slug]
     );
-
     res.status(201).json({ message: "Blog added successfully" });
   } catch (error) {
+    console.log("error", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
 
 exports.updateBlog = async (req, res) => {
-  const { userName, categoryName, title, content, image, status } = req.body;
+  const { userId, categoryName, title, content, image, status, slug } =
+    req.body;
   const { blogId } = req.params;
 
   try {
-    // 1. Get user_id from userName
-    const [userRows] = await db.execute("SELECT id FROM users WHERE name = ?", [
-      userName,
-    ]);
-
-    if (userRows.length === 0) {
-      return res.status(400).json({ error: "User not found" });
-    }
-
-    const user_id = userRows[0].id;
-
-    // 2. Get category_id from categoryName
+    // Get category_id from categoryName
     const [categoryRows] = await db.execute(
       "SELECT id FROM categories WHERE name = ?",
       [categoryName]
@@ -71,9 +50,9 @@ exports.updateBlog = async (req, res) => {
     // 3. Update the blog by ID
     await db.execute(
       `UPDATE blogs 
-       SET user_id = ?, category_id = ?, title = ?, content = ?, image = ?, status = ? 
+       SET user_id = ?, category_id = ?, title = ?, content = ?, image = ?, status = ? ,slug = ?
        WHERE id = ?`,
-      [user_id, category_id, title, content, image, status, blogId]
+      [userId, category_id, title, content, image, status, slug, blogId]
     );
 
     res.status(200).json({ message: "Blog updated successfully" });

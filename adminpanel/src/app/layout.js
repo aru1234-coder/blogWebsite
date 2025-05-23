@@ -2,6 +2,7 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "react-hot-toast";
+import { Providers } from "../redux/provider"; // adjust path if needed
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({
@@ -20,12 +21,14 @@ export default function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <div className="flex h-screen">
-          <div className="flex-1 flex flex-col bg-gray-100">
-            <div className="flex-1 overflow-auto">{children}</div>
+        <Providers>
+          <Toaster />
+          <div className="flex h-screen">
+            <div className="flex-1 flex flex-col bg-gray-100">
+              <div className="flex-1 overflow-auto">{children}</div>
+            </div>
           </div>
-        </div>
-        <Toaster />
+        </Providers>
       </body>
     </html>
   );

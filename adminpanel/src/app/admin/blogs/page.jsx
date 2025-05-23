@@ -1,6 +1,5 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import Link from "next/link";
 import { Button, Group } from "@mantine/core";
 import { DataTable } from "mantine-datatable";
 import { FaRegEdit } from "react-icons/fa";
@@ -70,9 +69,10 @@ const BlogPage = () => {
         highlightOnHover
         columns={[
           { accessor: "id", title: "ID", textAlign: "center" },
-          { accessor: "userName", title: "User" },
-          { accessor: "categoryName", title: "Category" },
           { accessor: "title", title: "Title" },
+          { accessor: "categoryName", title: "Category" },
+          { accessor: "userName", title: "Admin Name" },
+
           {
             accessor: "status",
             title: "Status",

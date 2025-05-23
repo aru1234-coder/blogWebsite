@@ -1,14 +1,16 @@
 "use client";
-import { LOGIN } from "@/utils/apiRoutes";
+import { LOGIN } from "../../../utils/apiRoutes";
 import axios from "axios";
 import Image from "next/image";
 import Link from "next/link";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FiMail, FiLock, FiEye, FiEyeOff } from "react-icons/fi";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import { useDispatch, useSelector } from "react-redux";
+import { loginSuccess } from "../../../../redux/features/authSlice";
 
-const page = () => {
+const Page = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -16,6 +18,15 @@ const page = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const router = useRouter();
+  const dispatch = useDispatch();
+  const { user, isAuthenticated } = useSelector((state) => state.auth);
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push("/admin");
+    }
+  }, [isAuthenticated, router]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -29,8 +40,14 @@ const page = () => {
     setIsSubmitting(true);
     try {
       const response = await axios.post(LOGIN, { email, password });
+      dispatch(
+        loginSuccess({
+          user: response.data.user,
+          token: response.data.token,
+        })
+      );
       toast.success("Login successfully");
-      router.push("/");
+      router.push("/admin");
     } catch (error) {
       toast.error("Something went wrong !!");
     } finally {
@@ -58,16 +75,18 @@ const page = () => {
 
   return (
     <div className="h-screen flex w-full overflow-hidden">
+      {/* Left Image */}
       <div className="w-1/2">
         <Image
           src="/assets/images/register.avif"
-          alt=""
+          alt="Login Illustration"
           width={500}
           height={500}
-          className="w-full h-full"
+          className="w-full h-full object-cover"
         />
       </div>
 
+      {/* Right Form */}
       <div className="w-1/2 flex items-center justify-center">
         <div className="w-full max-w-md p-8 space-y-8">
           <div className="text-center">
@@ -151,18 +170,46 @@ const page = () => {
               </div>
             </div>
 
+            {/* Submit Button */}
             <div>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${
+                className={`w-full flex justify-center items-center gap-2 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${
                   isSubmitting ? "bg-blue-400" : "bg-blue-600 hover:bg-blue-700"
                 } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
               >
-                {isSubmitting ? "Signing in..." : "Sign in"}
+                {isSubmitting ? (
+                  <>
+                    <svg
+                      className="animate-spin h-4 w-4 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8v4l5-5-5-5v4a10 10 0 100 20v-4l-5 5 5 5v-4a8 8 0 01-8-8z"
+                      />
+                    </svg>
+                    Signing in...
+                  </>
+                ) : (
+                  "Sign in"
+                )}
               </button>
             </div>
 
+            {/* Register Link */}
             <div className="text-center text-sm text-gray-500">
               Don't have an account?{" "}
               <Link
@@ -179,4 +226,4 @@ const page = () => {
   );
 };
 
-export default page;
+export default Page;

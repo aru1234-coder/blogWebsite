@@ -15,7 +15,6 @@ const CategoryModal = ({
   const [formData, setFormData] = useState({
     categoryName: "",
   });
-  console.log("formData", formData);
 
   useEffect(() => {
     if (mode === "edit" && categoryData) {

@@ -4,6 +4,8 @@ import { Modal, Button, TextInput, Select, Group, Stack } from "@mantine/core";
 import axios from "axios";
 import toast from "react-hot-toast";
 import apiRoutes from "@/app/utils/apiRoutes";
+import { useSelector } from "react-redux";
+import { slugify } from "@/app/utils/slugify";
 
 const BlogModal = ({
   opened,
@@ -13,32 +15,35 @@ const BlogModal = ({
   onSuccess,
 }) => {
   const [formData, setFormData] = useState({
-    userName: "",
     categoryName: "",
     title: "",
+    slug: "",
     status: "draft",
     content: "",
     image: "",
   });
 
+  const [allCategories, setAllCategories] = useState([]);
+
+  const { user, isAuthenticated } = useSelector((state) => state.auth);
   useEffect(() => {
     if (mode === "edit" && blogData) {
       setFormData({
-        userName: blogData.userName || "",
         categoryName: blogData.categoryName || "",
         title: blogData.title || "",
         status: blogData.status || "draft",
         content: blogData.content || "",
         image: blogData.image || "",
+        slug: blogData.slug || "",
       });
     } else {
       setFormData({
-        userName: "",
         categoryName: "",
         title: "",
         status: "draft",
         content: "",
         image: "",
+        slug: "",
       });
     }
   }, [mode, blogData, opened]);
@@ -52,11 +57,17 @@ const BlogModal = ({
 
   const handleSubmit = async () => {
     try {
+      const dataToSend = {
+        ...formData,
+        slug: slugify(formData.title), // generate right before send
+        userId: user?.id,
+      };
+
       if (mode === "edit") {
-        await axios.put(apiRoutes.blogs.update(blogData.id), formData);
+        await axios.put(apiRoutes.blogs.update(blogData.id), dataToSend);
         toast.success("Blog updated successfully");
       } else {
-        await axios.post(apiRoutes.blogs.add, formData);
+        await axios.post(apiRoutes.blogs.add, dataToSend);
         toast.success("Blog added successfully");
       }
       onClose();
@@ -64,6 +75,23 @@ const BlogModal = ({
     } catch (error) {
       toast.error("Something went wrong!");
       console.error(error);
+    }
+  };
+
+  useEffect(() => {
+    getAllCategory();
+  }, []);
+
+  const getAllCategory = async () => {
+    try {
+      const categoryResponse = await axios.get(apiRoutes.categories.getAll);
+      const formattedCategories = categoryResponse.data.map((cat) => ({
+        value: cat.name, // or use cat.slug or cat.id if needed
+        label: cat.name,
+      }));
+      setAllCategories(formattedCategories);
+    } catch (error) {
+      console.error("Showing error in fetching all categories");
     }
   };
 
@@ -75,24 +103,31 @@ const BlogModal = ({
       centered
     >
       <Stack>
-        <TextInput
-          label="User Name"
-          value={formData.userName}
-          onChange={(e) => handleChange("userName", e.target.value)}
-          required
-        />
-        <TextInput
-          label="Category Name"
+        <Select
+          label="Choose Category"
+          placeholder="Select category"
+          data={allCategories}
           value={formData.categoryName}
-          onChange={(e) => handleChange("categoryName", e.target.value)}
+          onChange={(value) => handleChange("categoryName", value)}
           required
         />
+
         <TextInput
           label="Title"
           value={formData.title}
-          onChange={(e) => handleChange("title", e.target.value)}
+          onChange={(e) => {
+            const newTitle = e.target.value;
+            setFormData((prev) => ({
+              ...prev,
+              title: newTitle,
+              slug: slugify(newTitle),
+            }));
+          }}
           required
         />
+
+        <TextInput label="Slug" value={formData.slug} readOnly disabled />
+
         <Select
           label="Status"
           data={[
