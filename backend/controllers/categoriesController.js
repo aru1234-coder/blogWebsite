@@ -3,7 +3,7 @@ const db = require("../db");
 require("dotenv").config();
 
 exports.addCategory = async (req, res) => {
-  const { categoryName } = req.body;
+  const { categoryName, slug } = req.body;
 
   try {
     // 1. Check if category already exists
@@ -18,8 +18,8 @@ exports.addCategory = async (req, res) => {
 
     // 2. Insert into categories table
     const [result] = await db.execute(
-      `INSERT INTO categories (name) VALUES (?)`,
-      [categoryName]
+      `INSERT INTO categories (name,slug) VALUES (?,?)`,
+      [categoryName, slug]
     );
 
     res.status(201).json({
@@ -33,7 +33,7 @@ exports.addCategory = async (req, res) => {
 };
 
 exports.updateCategory = async (req, res) => {
-  const { categoryName } = req.body;
+  const { categoryName, slug } = req.body;
   const { categoryId } = req.params;
 
   try {
@@ -49,8 +49,8 @@ exports.updateCategory = async (req, res) => {
 
     // 2. Update the category
     const [result] = await db.execute(
-      `UPDATE categories SET name = ? WHERE id = ?`,
-      [categoryName, categoryId]
+      `UPDATE categories SET name = ?,slug =? WHERE id = ?`,
+      [categoryName, slug, categoryId]
     );
 
     // 3. Check if update affected any rows
